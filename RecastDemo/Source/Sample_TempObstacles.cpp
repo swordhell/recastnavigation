@@ -1176,8 +1176,7 @@ void Sample_TempObstacles::handleMeshChanged(class InputGeom* geom)
 }
 
 
-
-void load_all_obstacles(std::vector<float> &ret)
+void load_all_aabbobstacles(std::vector<float>& ret)
 {
 	using namespace nlohmann;
 	json j;
@@ -1196,6 +1195,16 @@ void load_all_obstacles(std::vector<float> &ret)
 			auto dy = box["halfZ"].get<float>() * 0.01f;
 			auto dz = box["halfY"].get<float>() * 0.01f;
 
+			auto degree = box["rotationZ"].get<float>();
+
+			if ((degree > 45 && degree < 139)
+				|| (degree < -45 && degree > -139))
+			{
+				auto tmp = dz;
+				dz = dx;
+				dx = tmp;
+			}
+
 			ret.push_back(x - dx);
 			ret.push_back(y - dy);
 			ret.push_back(z - dz);
@@ -1203,6 +1212,41 @@ void load_all_obstacles(std::vector<float> &ret)
 			ret.push_back(x + dx);
 			ret.push_back(y + dy);
 			ret.push_back(z + dz);
+		}
+	}
+}
+
+
+void load_all_obbobstacles(std::vector<float> &ret)
+{
+	using namespace nlohmann;
+	json j;
+	std::ifstream i("D:/work/trunk/new_project_server/server/res/obstacle/Level04.json");
+	i >> j;
+
+	for (auto door : j["obstacleMap"])
+	{
+		for (auto box : door["boxes"])
+		{
+			auto x = box["centX"].get<float>() * -0.01f;
+			auto y = box["centZ"].get<float>() * 0.01f;
+			auto z = box["centY"].get<float>() * -0.01f;
+
+			auto halfx = box["halfX"].get<float>() * 0.01f;
+			auto halfy = box["halfZ"].get<float>() * 0.01f;
+			auto halfz = box["halfY"].get<float>() * 0.01f;
+
+			auto degree = box["rotationZ"].get<float>()*(3.1415926f/180.0f);
+
+			ret.push_back(x);
+			ret.push_back(y);
+			ret.push_back(z);
+
+			ret.push_back(halfx);
+			ret.push_back(halfy);
+			ret.push_back(halfz);
+
+			ret.push_back(degree);
 		}
 	}
 }
@@ -1218,17 +1262,27 @@ void Sample_TempObstacles::addTempObstacle(const float* pos)
 	//m_ctx->log(RC_LOG_PROGRESS, "addTempObstacle: %.2f, %.2f, %.2f", pos[0], pos[1], pos[2]);
 
 
+	//std::vector<float> ret;
+	//load_all_aabbobstacles(ret);
+	//auto count = ret.size() / 6;
+	//for (unsigned int i = 0; i < count; i++)
+	//{
+	//	float bmin[3] = { ret[i * 6],ret[i * 6 + 1], ret[i * 6 + 2] };
+	//	float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
+	//	dtObstacleRef result;
+	//	m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
+	//}
+
 	std::vector<float> ret;
-	load_all_obstacles(ret);
-
-	auto count = ret.size() / 6;
-
+	load_all_obbobstacles(ret);
+	auto count = ret.size() / 7;
 	for (unsigned int i = 0; i < count; i++)
 	{
-		float bmin[3] = { ret[i*6],ret[i * 6 + 1], ret[i * 6 + 2] };
-		float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
+		float centerPos[3] = { ret[i * 7],ret[i * 7 + 1], ret[i * 7 + 2] };
+		float extend[3] = { ret[i * 7 + 3], ret[i * 7 + 4], ret[i * 7 + 5] };
+		float degree = ret[i * 7 + 6];
 		dtObstacleRef result;
-		m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
+		m_tileCache->addBoxObstacle((const float*)centerPos, (const float*)extend, degree, &result);
 	}
 
 }
