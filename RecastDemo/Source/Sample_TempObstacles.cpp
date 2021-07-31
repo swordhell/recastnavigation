@@ -48,6 +48,8 @@
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
 #include "fastlz.h"
+#include "json.hpp"
+#include <fstream>
 
 #ifdef WIN32
 #	define snprintf _snprintf
@@ -662,8 +664,20 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 		else if (ob->state == DT_OBSTACLE_REMOVING)
 			col = duRGBA(220,0,0,128);
 
-		duDebugDrawCylinder(dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], col);
-		duDebugDrawCylinderWire(dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duDarkenCol(col), 2);
+		if (ob->type == DT_OBSTACLE_BOX)
+		{
+			unsigned int cols[3];
+			cols[0] = duRGBA(255, 0, 0, 128);
+			cols[1] = duRGBA(0, 255, 0, 128);
+			cols[2] = duRGBA(0, 0, 255, 128);
+			duDebugDrawBox(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], cols);
+		}
+		else if (ob->type == DT_OBSTACLE_CYLINDER)
+		{
+			duDebugDrawCylinder(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], col);
+			duDebugDrawCylinderWire(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], duDarkenCol(col), 2);
+
+		}
 	}
 }
 
@@ -1161,14 +1175,62 @@ void Sample_TempObstacles::handleMeshChanged(class InputGeom* geom)
 	initToolStates(this);
 }
 
+
+
+void load_all_obstacles(std::vector<float> &ret)
+{
+	using namespace nlohmann;
+	json j;
+	std::ifstream i("D:/work/trunk/new_project_server/server/res/obstacle/Level04.json");
+	i >> j;
+
+	for (auto door : j["obstacleMap"])
+	{
+		for (auto box : door["boxes"])
+		{
+			auto x = box["centX"].get<float>() * -0.01f;
+			auto y = box["centZ"].get<float>() * 0.01f;
+			auto z = box["centY"].get<float>() * -0.01f;
+
+			auto dx = box["halfX"].get<float>() * 0.01f;
+			auto dy = box["halfZ"].get<float>() * 0.01f;
+			auto dz = box["halfY"].get<float>() * 0.01f;
+
+			ret.push_back(x - dx);
+			ret.push_back(y - dy);
+			ret.push_back(z - dz);
+
+			ret.push_back(x + dx);
+			ret.push_back(y + dy);
+			ret.push_back(z + dz);
+		}
+	}
+}
+
 void Sample_TempObstacles::addTempObstacle(const float* pos)
 {
 	if (!m_tileCache)
 		return;
-	float p[3];
-	dtVcopy(p, pos);
-	p[1] -= 0.5f;
-	m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
+	//float p[3];
+	//dtVcopy(p, pos);
+	//p[1] -= 0.5f;
+	//m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
+	//m_ctx->log(RC_LOG_PROGRESS, "addTempObstacle: %.2f, %.2f, %.2f", pos[0], pos[1], pos[2]);
+
+
+	std::vector<float> ret;
+	load_all_obstacles(ret);
+
+	auto count = ret.size() / 6;
+
+	for (unsigned int i = 0; i < count; i++)
+	{
+		float bmin[3] = { ret[i*6],ret[i * 6 + 1], ret[i * 6 + 2] };
+		float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
+		dtObstacleRef result;
+		m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
+	}
+
 }
 
 void Sample_TempObstacles::removeTempObstacle(const float* sp, const float* sq)
@@ -1432,7 +1494,7 @@ void Sample_TempObstacles::saveAll(const char* path)
 
 		TileCacheTileHeader tileHeader;
 		tileHeader.tileRef = m_tileCache->getTileRef(tile);
-		tileHeader.dataSize = tile->dataSize;
+		tileHeader.dataSize = tile->dataSize; 
 		fwrite(&tileHeader, sizeof(tileHeader), 1, fp);
 
 		fwrite(tile->data, tile->dataSize, 1, fp);

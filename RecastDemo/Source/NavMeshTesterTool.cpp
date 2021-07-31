@@ -849,6 +849,11 @@ void NavMeshTesterTool::recalc()
 				   m_spos[0],m_spos[1],m_spos[2], m_epos[0],m_epos[1],m_epos[2],
 				   m_filter.getIncludeFlags(), m_filter.getExcludeFlags()); 
 #endif
+
+			m_sample->getContext()->log(RC_LOG_PROGRESS, "pi  %f %f %f  %f %f %f  0x%x 0x%x",
+				m_spos[0], m_spos[1], m_spos[2], m_epos[0], m_epos[1], m_epos[2],
+				m_filter.getIncludeFlags(), m_filter.getExcludeFlags());
+
 			m_navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, &m_filter, m_polys, &m_npolys, MAX_POLYS);
 			m_nstraightPath = 0;
 			if (m_npolys)
@@ -906,6 +911,7 @@ void NavMeshTesterTool::recalc()
 			m_straightPath[0] = m_spos[0];
 			m_straightPath[1] = m_spos[1];
 			m_straightPath[2] = m_spos[2];
+			// m_navQuery->findNearestPoly();
 			m_navQuery->raycast(m_startRef, m_spos, m_epos, &m_filter, &t, m_hitNormal, m_polys, &m_npolys, MAX_POLYS);
 			if (t > 1)
 			{
