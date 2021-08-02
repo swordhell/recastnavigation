@@ -680,6 +680,22 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 			duDebugDrawCylinderWire(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], duDarkenCol(col), 2);
 
 		}
+		else if (ob->type == DT_OBSTACLE_ORIENTED_BOX)
+		{
+			//unsigned int cols[3];
+			//cols[0] = duRGBA(255, 0, 0, 128); // 需要输入3种颜色作为参数
+			//cols[1] = duRGBA(0, 255, 0, 128);
+			//cols[2] = duRGBA(0, 0, 255, 128);
+			//// 绘制obb立方体
+			//duDebugDrawOBB(dd,ob->orientedBox.center[0], ob->orientedBox.center[1], ob->orientedBox.center[2],
+			//	ob->orientedBox.halfExtents[0], ob->orientedBox.halfExtents[1],ob->orientedBox.halfExtents[2],
+			//	ob->orientedBox.yaw, cols);
+
+			// 绘制obb的边线
+			duDebugDrawOBBWire(dd, ob->orientedBox.center[0], ob->orientedBox.center[1], ob->orientedBox.center[2],
+				ob->orientedBox.halfExtents[0], ob->orientedBox.halfExtents[1], ob->orientedBox.halfExtents[2],
+				ob->orientedBox.yaw, col,2);
+		}
 	}
 }
 

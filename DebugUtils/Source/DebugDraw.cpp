@@ -98,6 +98,17 @@ void duDebugDrawBoxWire(struct duDebugDraw* dd, float minx, float miny, float mi
 	dd->end();
 }
 
+void duDebugDrawOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int col, const float lineWidth)
+{
+
+	if (!dd) return;
+
+	dd->begin(DU_DRAW_LINES, lineWidth);
+	duAppendOBBWire(dd, cx, cy, cz, extendx, extendy, extendz, yaw, col);
+	dd->end();
+}
+
 void duDebugDrawArc(struct duDebugDraw* dd, const float x0, const float y0, const float z0,
 					const float x1, const float y1, const float z1, const float h,
 					const float as0, const float as1, unsigned int col, const float lineWidth)
@@ -157,6 +168,7 @@ void duDebugDrawOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
 	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol)
 {
 	if (!dd) return;
+
 	dd->begin(DU_DRAW_TRIS);
 	duAppendOBB(dd, cx, cy, cz, extendx, extendy, extendz, yaw, fcol);
 	dd->end();
@@ -271,6 +283,84 @@ void duAppendBoxWire(struct duDebugDraw* dd, float minx, float miny, float minz,
 	dd->vertex(maxx, maxy, maxz, col);
 	dd->vertex(minx, miny, maxz, col);
 	dd->vertex(minx, maxy, maxz, col);
+}
+
+// 画出OBB棱角
+void duAppendOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw,
+	unsigned int col)
+{
+	if (!dd) return;
+
+	mathfu::Vector<float, 3> centerPos(cx, cy, cz);
+
+	// 找到AABB点
+	mathfu::Vector<float, 3> p0(-extendx, -extendy, -extendz);
+	mathfu::Vector<float, 3> p1(extendx, -extendy, -extendz);
+	mathfu::Vector<float, 3> p2(extendx, -extendy, extendz);
+	mathfu::Vector<float, 3> p3(-extendx, -extendy, extendz);
+
+	mathfu::Vector<float, 3> p4(-extendx, extendy, -extendz);
+	mathfu::Vector<float, 3> p5(extendx, extendy, -extendz);
+	mathfu::Vector<float, 3> p6(extendx, extendy, extendz);
+	mathfu::Vector<float, 3> p7(-extendx, extendy, extendz);
+
+	// 通过矩阵将点yaw。
+	mathfu::Matrix<float, 3> rotation_around_y(mathfu::Matrix<float, 3>::RotationY(-yaw));
+	p0 = p0 * rotation_around_y + centerPos;
+	p1 = p1 * rotation_around_y + centerPos;
+	p2 = p2 * rotation_around_y + centerPos;
+	p3 = p3 * rotation_around_y + centerPos;
+	p4 = p4 * rotation_around_y + centerPos;
+	p5 = p5 * rotation_around_y + centerPos;
+	p6 = p6 * rotation_around_y + centerPos;
+	p7 = p7 * rotation_around_y + centerPos;
+
+
+	const float verts[8 * 3] =
+	{
+		// 正面4个顶点，按照逆时针顺序
+		p0.x, p0.y, p0.z, // 0
+		p1.x, p1.y, p1.z, // 1
+		p2.x, p2.y, p2.z, // 2
+		p3.x, p3.y, p3.z, // 3
+
+		// 背面4个顶点
+		p4.x, p4.y, p4.z,
+		p5.x, p5.y, p5.z,
+		p6.x, p6.y, p6.z,
+		p7.x, p7.y, p7.z,
+	};
+
+	// Top
+	dd->vertex(p3.x, p3.y, p3.z, col);
+	dd->vertex(p2.x, p2.y, p2.z, col);
+	dd->vertex(p2.x, p2.y, p2.z, col);
+	dd->vertex(p6.x, p6.y, p6.z, col);
+	dd->vertex(p6.x, p6.y, p6.z, col);
+	dd->vertex(p7.x, p7.y, p7.z, col);
+	dd->vertex(p7.x, p7.y, p7.z, col);
+	dd->vertex(p3.x, p3.y, p3.z, col);
+
+	// bottom
+	dd->vertex(p0.x, p0.y, p0.z, col);
+	dd->vertex(p1.x, p1.y, p1.z, col);
+	dd->vertex(p1.x, p1.y, p1.z, col);
+	dd->vertex(p5.x, p5.y, p5.z, col);
+	dd->vertex(p5.x, p5.y, p5.z, col);
+	dd->vertex(p4.x, p4.y, p4.z, col);
+	dd->vertex(p4.x, p4.y, p4.z, col);
+	dd->vertex(p0.x, p0.y, p0.z, col);
+
+	// Sides
+	dd->vertex(p0.x, p0.y, p0.z, col);
+	dd->vertex(p3.x, p3.y, p3.z, col);
+	dd->vertex(p1.x, p1.y, p1.z, col);
+	dd->vertex(p2.x, p2.y, p2.z, col);
+	dd->vertex(p5.x, p5.y, p5.z, col);
+	dd->vertex(p6.x, p6.y, p6.z, col);
+	dd->vertex(p4.x, p4.y, p4.z, col);
+	dd->vertex(p7.x, p7.y, p7.z, col);
 }
 
 void duAppendBoxPoints(struct duDebugDraw* dd, float minx, float miny, float minz,
@@ -398,60 +488,77 @@ void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz
 	}
 }
 
-
+// 绘制OBB
 void duAppendOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
-	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol)
+	float extendx, float extendy, float extendz, float yaw, const unsigned int *fcol)
 {
 	if (!dd) return;
 
+	mathfu::Vector<float, 3> centerPos(cx, cy, cz);
+
 	// 找到AABB点
-	auto minx = cx - extendx;
-	auto miny = cy - extendy;
-	auto minz = cz - extendz;
+	mathfu::Vector<float, 3> p0(-extendx,-extendy, -extendz);
+	mathfu::Vector<float, 3> p1(extendx, -extendy, -extendz);
+	mathfu::Vector<float, 3> p2(extendx, -extendy, extendz);
+	mathfu::Vector<float, 3> p3(-extendx, -extendy, extendz);
 
-	auto maxx = cx + extendx;
-	auto maxy = cy + extendy;
-	auto maxz = cz + extendz;
+	mathfu::Vector<float, 3> p4(-extendx, extendy, -extendz);
+	mathfu::Vector<float, 3> p5(extendx, extendy, -extendz);
+	mathfu::Vector<float, 3> p6(extendx, extendy, extendz);
+	mathfu::Vector<float, 3> p7(-extendx, extendy, extendz);
 
-	mathfu::Vector<float, 2>
+	// 通过矩阵将点yaw。
+	mathfu::Matrix<float, 3> rotation_around_y(mathfu::Matrix<float,3>::RotationY(-yaw));
+	p0 = p0 * rotation_around_y + centerPos;
+	p1 = p1 * rotation_around_y + centerPos;
+	p2 = p2 * rotation_around_y + centerPos;
+	p3 = p3 * rotation_around_y + centerPos;
+	p4 = p4 * rotation_around_y + centerPos;
+	p5 = p5 * rotation_around_y + centerPos;
+	p6 = p6 * rotation_around_y + centerPos;
+	p7 = p7 * rotation_around_y + centerPos;
 
 	const float verts[8 * 3] =
 	{
 		// 正面4个顶点，按照逆时针顺序
-		minx, miny, minz, // 0
-		maxx, miny, minz, // 1
-		maxx, miny, maxz, // 2
-		minx, miny, maxz, // 3
+		p0.x, p0.y, p0.z, // 0
+		p1.x, p1.y, p1.z, // 1
+		p2.x, p2.y, p2.z, // 2
+		p3.x, p3.y, p3.z, // 3
 
 		// 背面4个顶点
-		minx, maxy, minz,
-		maxx, maxy, minz,
-		maxx, maxy, maxz,
-		minx, maxy, maxz,
+		p4.x, p4.y, p4.z,
+		p5.x, p5.y, p5.z,
+		p6.x, p6.y, p6.z,
+		p7.x, p7.y, p7.z,
 	};
 
-	// 通过矩阵将点yaw。
-
-	static const unsigned char inds[6 * 4] =
+	static const unsigned char inds[12 * 3] =
 	{
-		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
-		7, 6, 5, 4,
-		0, 1, 2, 3,
-		1, 5, 6, 2,
-		3, 7, 4, 0,
-		2, 6, 7, 3,
-		0, 4, 5, 1,
+		// 将立方体的每个面都使用两个三角形
+		0,1,2,
+		2,3,0,
+		5,4,6,
+		4,7,6,
+		1,5,6,
+		6,2,1,
+		0,3,7,
+		7,4,0,
+		3,2,6,
+		6,7,3,
+		5,1,0,
+		4,5,0,
 	};
 
 	// 一共能支持读取6种颜色
 	const unsigned char* in = inds;
-	for (int i = 0; i < 6; ++i)
+	for (int i = 0; i < 12; ++i)
 	{
+		auto colidx = i / 4;
 		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
-		dd->vertex(&verts[*in * 3], fcol[i]); in++;
-		dd->vertex(&verts[*in * 3], fcol[i]); in++;
-		dd->vertex(&verts[*in * 3], fcol[i]); in++;
-		dd->vertex(&verts[*in * 3], fcol[i]); in++;
+		dd->vertex(verts[inds[i * 3] * 3], verts[inds[i * 3] * 3 + 1], verts[inds[i * 3] * 3 + 2], fcol[colidx]);
+		dd->vertex(verts[inds[i * 3 + 1] * 3], verts[inds[i * 3 + 1] * 3 + 1], verts[inds[i * 3 + 1] * 3 + 2], fcol[colidx]);
+		dd->vertex(verts[inds[i * 3 + 2] * 3], verts[inds[i * 3 + 2] * 3 + 1], verts[inds[i * 3 + 2] * 3 + 2], fcol[colidx]);
 	}
 }
 

@@ -134,6 +134,9 @@ void duDebugDrawCylinderWire(struct duDebugDraw* dd, float minx, float miny, flo
 void duDebugDrawBoxWire(struct duDebugDraw* dd, float minx, float miny, float minz,
 						float maxx, float maxy, float maxz, unsigned int col, const float lineWidth);
 
+void duDebugDrawOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int col, const float lineWidth);
+
 void duDebugDrawArc(struct duDebugDraw* dd, const float x0, const float y0, const float z0,
 					const float x1, const float y1, const float z1, const float h,
 					const float as0, const float as1, unsigned int col, const float lineWidth);
@@ -154,9 +157,6 @@ void duDebugDrawBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 void duDebugDrawOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
 	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol);
 
-void duDebugDrawOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
-	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol);
-
 void duDebugDrawCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 						 float maxx, float maxy, float maxz, unsigned int col);
 
@@ -171,6 +171,10 @@ void duAppendCylinderWire(struct duDebugDraw* dd, float minx, float miny, float 
 
 void duAppendBoxWire(struct duDebugDraw* dd, float minx, float miny, float minz,
 					 float maxx, float maxy, float maxz, unsigned int col);
+
+void duAppendOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
+					float extendx, float extendy, float extendz, float yaw,
+					unsigned int col);
 
 void duAppendBoxPoints(struct duDebugDraw* dd, float minx, float miny, float minz,
 					   float maxx, float maxy, float maxz, unsigned int col);
@@ -193,7 +197,7 @@ void duAppendBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 				 float maxx, float maxy, float maxz, const unsigned int* fcol);
 
 void duAppendOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
-	float extendx, float extendy, float extendz, float yaw,const unsigned int* fcol);
+	float extendx, float extendy, float extendz, float yaw,const unsigned int *col);
 
 void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 					  float maxx, float maxy, float maxz, unsigned int col);
