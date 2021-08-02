@@ -645,7 +645,7 @@ dtObstacleRef hitTestObstacle(const dtTileCache* tc, const float* sp, const floa
 	}
 	return tc->getObstacleRef(obmin);
 }
-	
+
 void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 {
 	// Draw obstacles
@@ -667,14 +667,16 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 		if (ob->type == DT_OBSTACLE_BOX)
 		{
 			unsigned int cols[3];
-			cols[0] = duRGBA(255, 0, 0, 128);
-			cols[1] = duRGBA(0, 255, 0, 128);
+			cols[0] = duRGBA(255, 0, 0, 128); // 需要输入3种颜色作为参数
+			cols[1] = duRGBA(0, 255, 0, 128); 
 			cols[2] = duRGBA(0, 0, 255, 128);
 			duDebugDrawBox(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], cols);
 		}
 		else if (ob->type == DT_OBSTACLE_CYLINDER)
 		{
+			// 绘制圆柱体
 			duDebugDrawCylinder(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], col);
+			// 绘制圆柱体的线
 			duDebugDrawCylinderWire(dd, bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2], duDarkenCol(col), 2);
 
 		}
@@ -1261,29 +1263,28 @@ void Sample_TempObstacles::addTempObstacle(const float* pos)
 	//m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
 	//m_ctx->log(RC_LOG_PROGRESS, "addTempObstacle: %.2f, %.2f, %.2f", pos[0], pos[1], pos[2]);
 
-
-	//std::vector<float> ret;
-	//load_all_aabbobstacles(ret);
-	//auto count = ret.size() / 6;
-	//for (unsigned int i = 0; i < count; i++)
-	//{
-	//	float bmin[3] = { ret[i * 6],ret[i * 6 + 1], ret[i * 6 + 2] };
-	//	float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
-	//	dtObstacleRef result;
-	//	m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
-	//}
-
 	std::vector<float> ret;
-	load_all_obbobstacles(ret);
-	auto count = ret.size() / 7;
+	load_all_aabbobstacles(ret);
+	auto count = ret.size() / 6;
 	for (unsigned int i = 0; i < count; i++)
 	{
-		float centerPos[3] = { ret[i * 7],ret[i * 7 + 1], ret[i * 7 + 2] };
-		float extend[3] = { ret[i * 7 + 3], ret[i * 7 + 4], ret[i * 7 + 5] };
-		float degree = ret[i * 7 + 6];
+		float bmin[3] = { ret[i * 6],ret[i * 6 + 1], ret[i * 6 + 2] };
+		float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
 		dtObstacleRef result;
-		m_tileCache->addBoxObstacle((const float*)centerPos, (const float*)extend, degree, &result);
+		m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
 	}
+
+	//std::vector<float> ret;
+	//load_all_obbobstacles(ret);
+	//auto count = ret.size() / 7;
+	//for (unsigned int i = 0; i < count; i++)
+	//{
+	//	float centerPos[3] = { ret[i * 7],ret[i * 7 + 1], ret[i * 7 + 2] };
+	//	float extend[3] = { ret[i * 7 + 3], ret[i * 7 + 4], ret[i * 7 + 5] };
+	//	float degree = ret[i * 7 + 6];
+	//	dtObstacleRef result;
+	//	m_tileCache->addBoxObstacle((const float*)centerPos, (const float*)extend, degree, &result);
+	//}
 
 }
 

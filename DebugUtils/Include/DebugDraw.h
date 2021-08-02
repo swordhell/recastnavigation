@@ -151,6 +151,12 @@ void duDebugDrawCross(struct duDebugDraw* dd, const float x, const float y, cons
 void duDebugDrawBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 					float maxx, float maxy, float maxz, const unsigned int* fcol);
 
+void duDebugDrawOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol);
+
+void duDebugDrawOBBWire(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol);
+
 void duDebugDrawCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 						 float maxx, float maxy, float maxz, unsigned int col);
 
@@ -185,6 +191,9 @@ void duAppendCross(struct duDebugDraw* dd, const float x, const float y, const f
 
 void duAppendBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 				 float maxx, float maxy, float maxz, const unsigned int* fcol);
+
+void duAppendOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw,const unsigned int* fcol);
 
 void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 					  float maxx, float maxy, float maxz, unsigned int col);

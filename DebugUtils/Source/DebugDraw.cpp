@@ -21,7 +21,8 @@
 #include "DebugDraw.h"
 #include "DetourMath.h"
 #include "DetourNavMesh.h"
-
+#include "mathfu/matrix.h"
+#include "mathfu/vector.h"
 
 duDebugDraw::~duDebugDraw()
 {
@@ -76,6 +77,7 @@ void duCalcBoxColors(unsigned int* colors, unsigned int colTop, unsigned int col
 	colors[5] = duMultCol(colSide, 217);
 }
 
+// 绘制线条
 void duDebugDrawCylinderWire(struct duDebugDraw* dd, float minx, float miny, float minz,
 							 float maxx, float maxy, float maxz, unsigned int col, const float lineWidth)
 {
@@ -138,6 +140,7 @@ void duDebugDrawCross(struct duDebugDraw* dd, const float x, const float y, cons
 	dd->end();
 }
 
+// 输入参数其实就是AABB的两个顶点位置，fcol是给定颜色
 void duDebugDrawBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 					float maxx, float maxy, float maxz, const unsigned int* fcol)
 {
@@ -148,6 +151,19 @@ void duDebugDrawBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 	dd->end();
 }
 
+
+// 绘制OBB立方体
+void duDebugDrawOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol)
+{
+	if (!dd) return;
+	dd->begin(DU_DRAW_TRIS);
+	duAppendOBB(dd, cx, cy, cz, extendx, extendy, extendz, yaw, fcol);
+	dd->end();
+}
+
+
+// 绘制圆柱体，是按照三角形来绘制
 void duDebugDrawCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 						 float maxx, float maxy, float maxz, unsigned int col)
 {
@@ -178,12 +194,13 @@ void duDebugDrawGridXZ(struct duDebugDraw* dd, const float ox, const float oy, c
 	dd->end();
 }
 		 
-
+// 画线条
 void duAppendCylinderWire(struct duDebugDraw* dd, float minx, float miny, float minz,
 						  float maxx, float maxy, float maxz, unsigned int col)
 {
 	if (!dd) return;
 
+	// 等分16分，计算出对应的标准化后的向量
 	static const int NUM_SEG = 16;
 	static float dir[NUM_SEG*2];
 	static bool init = false;
@@ -198,18 +215,22 @@ void duAppendCylinderWire(struct duDebugDraw* dd, float minx, float miny, float 
 		}
 	}
 	
-	const float cx = (maxx + minx)/2;
+	const float cx = (maxx + minx)/2; // 算出中心点位置
 	const float cz = (maxz + minz)/2;
-	const float rx = (maxx - minx)/2;
-	const float rz = (maxz - minz)/2;
+	const float rx = (maxx - minx)/2; // x,z的半径
+	const float rz = (maxz - minz)/2; 
 	
+	// 循环画圆面
 	for (int i = 0, j = NUM_SEG-1; i < NUM_SEG; j = i++)
 	{
+		// 画底部圆，两点连成线
 		dd->vertex(cx+dir[j*2+0]*rx, miny, cz+dir[j*2+1]*rz, col);
 		dd->vertex(cx+dir[i*2+0]*rx, miny, cz+dir[i*2+1]*rz, col);
+		// 画顶部圆，两点连成线
 		dd->vertex(cx+dir[j*2+0]*rx, maxy, cz+dir[j*2+1]*rz, col);
 		dd->vertex(cx+dir[i*2+0]*rx, maxy, cz+dir[i*2+1]*rz, col);
 	}
+	// 绘制圆柱体4个轴线方向的垂直圆通黑线
 	for (int i = 0; i < NUM_SEG; i += NUM_SEG/4)
 	{
 		dd->vertex(cx+dir[i*2+0]*rx, miny, cz+dir[i*2+1]*rz, col);
@@ -277,23 +298,29 @@ void duAppendBoxPoints(struct duDebugDraw* dd, float minx, float miny, float min
 	dd->vertex(minx, maxy, minz, col);
 }
 
+// 绘制AABB方式的Box
 void duAppendBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 				 float maxx, float maxy, float maxz, const unsigned int* fcol)
 {
 	if (!dd) return;
 	const float verts[8*3] =
 	{
-		minx, miny, minz,
-		maxx, miny, minz,
-		maxx, miny, maxz,
-		minx, miny, maxz,
+		// 正面4个顶点，按照逆时针顺序
+		minx, miny, minz, // 0
+		maxx, miny, minz, // 1
+		maxx, miny, maxz, // 2
+		minx, miny, maxz, // 3
+
+		// 背面4个顶点
 		minx, maxy, minz,
 		maxx, maxy, minz,
 		maxx, maxy, maxz,
 		minx, maxy, maxz,
 	};
+
 	static const unsigned char inds[6*4] =
 	{
+		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
 		7, 6, 5, 4,
 		0, 1, 2, 3,
 		1, 5, 6, 2,
@@ -302,9 +329,11 @@ void duAppendBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 		0, 4, 5, 1,
 	};
 	
+	// 一共能支持读取6种颜色
 	const unsigned char* in = inds;
 	for (int i = 0; i < 6; ++i)
 	{
+		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
 		dd->vertex(&verts[*in*3], fcol[i]); in++;
 		dd->vertex(&verts[*in*3], fcol[i]); in++;
 		dd->vertex(&verts[*in*3], fcol[i]); in++;
@@ -312,11 +341,13 @@ void duAppendBox(struct duDebugDraw* dd, float minx, float miny, float minz,
 	}
 }
 
+// 绘制圆柱体
 void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz,
 					  float maxx, float maxy, float maxz, unsigned int col)
 {
 	if (!dd) return;
 	
+	// 等分16分
 	static const int NUM_SEG = 16;
 	static float dir[NUM_SEG*2];
 	static bool init = false;
@@ -333,18 +364,20 @@ void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz
 	
 	unsigned int col2 = duMultCol(col, 160);
 	
-	const float cx = (maxx + minx)/2;
+	const float cx = (maxx + minx)/2; // 计算中心位置
 	const float cz = (maxz + minz)/2;
-	const float rx = (maxx - minx)/2;
+	const float rx = (maxx - minx)/2; // 计算x,z的半径
 	const float rz = (maxz - minz)/2;
 
-	for (int i = 2; i < NUM_SEG; ++i)
+	// 绘制底部圆，固定第一个点，然后开始在圆面上按照逆时针找圆周上的邻近两个点，连成三角形，最终构成圆面
+	for (int i = 2; i < NUM_SEG-2; ++i)
 	{
 		const int a = 0, b = i-1, c = i;
 		dd->vertex(cx+dir[a*2+0]*rx, miny, cz+dir[a*2+1]*rz, col2);
 		dd->vertex(cx+dir[b*2+0]*rx, miny, cz+dir[b*2+1]*rz, col2);
 		dd->vertex(cx+dir[c*2+0]*rx, miny, cz+dir[c*2+1]*rz, col2);
 	}
+	// 绘制顶部圆面
 	for (int i = 2; i < NUM_SEG; ++i)
 	{
 		const int a = 0, b = i, c = i-1;
@@ -352,6 +385,7 @@ void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz
 		dd->vertex(cx+dir[b*2+0]*rx, maxy, cz+dir[b*2+1]*rz, col);
 		dd->vertex(cx+dir[c*2+0]*rx, maxy, cz+dir[c*2+1]*rz, col);
 	}
+	// 绘制圆筒，用两个三角形平凑出一个矩形出来
 	for (int i = 0, j = NUM_SEG-1; i < NUM_SEG; j = i++)
 	{
 		dd->vertex(cx+dir[i*2+0]*rx, miny, cz+dir[i*2+1]*rz, col2);
@@ -361,6 +395,63 @@ void duAppendCylinder(struct duDebugDraw* dd, float minx, float miny, float minz
 		dd->vertex(cx+dir[i*2+0]*rx, miny, cz+dir[i*2+1]*rz, col2);
 		dd->vertex(cx+dir[j*2+0]*rx, maxy, cz+dir[j*2+1]*rz, col);
 		dd->vertex(cx+dir[i*2+0]*rx, maxy, cz+dir[i*2+1]*rz, col);
+	}
+}
+
+
+void duAppendOBB(struct duDebugDraw* dd, float cx, float cy, float cz,
+	float extendx, float extendy, float extendz, float yaw, const unsigned int* fcol)
+{
+	if (!dd) return;
+
+	// 找到AABB点
+	auto minx = cx - extendx;
+	auto miny = cy - extendy;
+	auto minz = cz - extendz;
+
+	auto maxx = cx + extendx;
+	auto maxy = cy + extendy;
+	auto maxz = cz + extendz;
+
+	mathfu::Vector<float, 2>
+
+	const float verts[8 * 3] =
+	{
+		// 正面4个顶点，按照逆时针顺序
+		minx, miny, minz, // 0
+		maxx, miny, minz, // 1
+		maxx, miny, maxz, // 2
+		minx, miny, maxz, // 3
+
+		// 背面4个顶点
+		minx, maxy, minz,
+		maxx, maxy, minz,
+		maxx, maxy, maxz,
+		minx, maxy, maxz,
+	};
+
+	// 通过矩阵将点yaw。
+
+	static const unsigned char inds[6 * 4] =
+	{
+		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
+		7, 6, 5, 4,
+		0, 1, 2, 3,
+		1, 5, 6, 2,
+		3, 7, 4, 0,
+		2, 6, 7, 3,
+		0, 4, 5, 1,
+	};
+
+	// 一共能支持读取6种颜色
+	const unsigned char* in = inds;
+	for (int i = 0; i < 6; ++i)
+	{
+		// 每一句话都是从立方体上去一个点，而且刚好是6面体的某个面
+		dd->vertex(&verts[*in * 3], fcol[i]); in++;
+		dd->vertex(&verts[*in * 3], fcol[i]); in++;
+		dd->vertex(&verts[*in * 3], fcol[i]); in++;
+		dd->vertex(&verts[*in * 3], fcol[i]); in++;
 	}
 }
 
