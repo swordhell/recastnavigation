@@ -443,10 +443,14 @@ dtStatus dtTileCache::addBoxObstacle(const float* center, const float* halfExten
 	dtVcopy(ob->orientedBox.center, center);
 	dtVcopy(ob->orientedBox.halfExtents, halfExtents);
 
-	float coshalf= cosf(0.5f*yRadians);
-	float sinhalf = sinf(-0.5f*yRadians);
-	ob->orientedBox.rotAux[0] = coshalf*sinhalf;
-	ob->orientedBox.rotAux[1] = coshalf*coshalf - 0.5f;
+	//float coshalf= cosf(0.5f*yRadians);
+	//float sinhalf = sinf(-0.5f*yRadians);
+	//ob->orientedBox.rotAux[0] = coshalf*sinhalf;
+	//ob->orientedBox.rotAux[1] = coshalf*coshalf - 0.5f;
+	auto r0 = -1.0f*sinf(yRadians) / 2.0f;
+	auto r1 = (cosf(yRadians)) / 2.0f;
+	ob->orientedBox.rotAux[0] = r0;
+	ob->orientedBox.rotAux[1] = r1;
 	ob->orientedBox.yaw = yRadians;
 
 	ObstacleRequest* req = &m_reqs[m_nreqs++];

@@ -2044,35 +2044,47 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float c
 dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float cs, const float ch,
 					   const float* center, const float* halfExtents, const float* rotAux, const unsigned char areaId)
 {
+	// 图层的尺寸边界
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
+
+	// 获得将位置缩放到cell，agent的倍率
 	const float ics = 1.0f/cs;
 	const float ich = 1.0f/ch;
 
+	// 将位置从cell里面反成具体的位置
+	// 已orig位置为原点计算相差的x,z
 	float cx = (center[0] - orig[0])*ics;
 	float cz = (center[2] - orig[2])*ics;
 	
+	// 读取x,z的半径最大值，放大1.41f。
 	float maxr = 1.41f*dtMax(halfExtents[0], halfExtents[2]);
+	// 计算包围盒的4个点
 	int minx = (int)floorf(cx - maxr*ics);
 	int maxx = (int)floorf(cx + maxr*ics);
 	int minz = (int)floorf(cz - maxr*ics);
 	int maxz = (int)floorf(cz + maxr*ics);
+	// 计算y轴的实际位置
 	int miny = (int)floorf((center[1]-halfExtents[1]-orig[1])*ich);
 	int maxy = (int)floorf((center[1]+halfExtents[1]-orig[1])*ich);
 
+	// 包围盒未落在这块区域
 	if (maxx < 0) return DT_SUCCESS;
 	if (minx >= w) return DT_SUCCESS;
 	if (maxz < 0) return DT_SUCCESS;
 	if (minz >= h) return DT_SUCCESS;
 
+	// 包围盒边界和区域对齐
 	if (minx < 0) minx = 0;
 	if (maxx >= w) maxx = w-1;
 	if (minz < 0) minz = 0;
 	if (maxz >= h) maxz = h-1;
 	
+	// 计算x,z一半的尺寸，放大0.5f
 	float xhalf = halfExtents[0]*ics + 0.5f;
 	float zhalf = halfExtents[2]*ics + 0.5f;
 
+	// 遍历全部点
 	for (int z = minz; z <= maxz; ++z)
 	{
 		for (int x = minx; x <= maxx; ++x)

@@ -60,6 +60,9 @@ struct dtObstacleOrientedBox
 	float center[ 3 ];
 	float halfExtents[ 3 ];
 	float rotAux[ 2 ]; //{ cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
+	//{-sin(angle)/2; cos(angle)/2}
+	// cos^2(¦Á/2)=(1+cos¦Á)/2
+	// sin2¦Á=2sin¦Ácos¦Á
 	float yaw;
 };
 

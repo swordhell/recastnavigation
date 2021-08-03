@@ -51,6 +51,7 @@
 #include "json.hpp"
 #include <fstream>
 
+
 #ifdef WIN32
 #	define snprintf _snprintf
 #endif
@@ -682,14 +683,14 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 		}
 		else if (ob->type == DT_OBSTACLE_ORIENTED_BOX)
 		{
-			//unsigned int cols[3];
-			//cols[0] = duRGBA(255, 0, 0, 128); // 需要输入3种颜色作为参数
-			//cols[1] = duRGBA(0, 255, 0, 128);
-			//cols[2] = duRGBA(0, 0, 255, 128);
-			//// 绘制obb立方体
-			//duDebugDrawOBB(dd,ob->orientedBox.center[0], ob->orientedBox.center[1], ob->orientedBox.center[2],
-			//	ob->orientedBox.halfExtents[0], ob->orientedBox.halfExtents[1],ob->orientedBox.halfExtents[2],
-			//	ob->orientedBox.yaw, cols);
+			unsigned int cols[3];
+			cols[0] = duRGBA(255, 0, 0, 128); // 需要输入3种颜色作为参数
+			cols[1] = duRGBA(0, 255, 0, 128);
+			cols[2] = duRGBA(0, 0, 255, 128);
+			// 绘制obb立方体
+			duDebugDrawOBB(dd,ob->orientedBox.center[0], ob->orientedBox.center[1], ob->orientedBox.center[2],
+				ob->orientedBox.halfExtents[0], ob->orientedBox.halfExtents[1],ob->orientedBox.halfExtents[2],
+				ob->orientedBox.yaw, cols);
 
 			// 绘制obb的边线
 			duDebugDrawOBBWire(dd, ob->orientedBox.center[0], ob->orientedBox.center[1], ob->orientedBox.center[2],
@@ -1198,7 +1199,7 @@ void load_all_aabbobstacles(std::vector<float>& ret)
 {
 	using namespace nlohmann;
 	json j;
-	std::ifstream i("D:/work/trunk/new_project_server/server/res/obstacle/Level04.json");
+	std::ifstream i("Obstacles/O.json");
 	i >> j;
 
 	for (auto door : j["obstacleMap"])
@@ -1239,7 +1240,7 @@ void load_all_obbobstacles(std::vector<float> &ret)
 {
 	using namespace nlohmann;
 	json j;
-	std::ifstream i("D:/work/trunk/new_project_server/server/res/obstacle/Level04.json");
+	std::ifstream i("Obstacles/O.json");
 	i >> j;
 
 	for (auto door : j["obstacleMap"])
