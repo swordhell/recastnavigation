@@ -8,6 +8,11 @@
 #include "DetourAssert.h"
 #include <string.h>
 #include <new>
+#include <vector>
+#include <float.h>
+
+#include "mathfu/matrix.h"
+#include "mathfu/vector.h"
 
 dtTileCache* dtAllocTileCache()
 {
@@ -443,14 +448,14 @@ dtStatus dtTileCache::addBoxObstacle(const float* center, const float* halfExten
 	dtVcopy(ob->orientedBox.center, center);
 	dtVcopy(ob->orientedBox.halfExtents, halfExtents);
 
-	float coshalf= cosf(0.5f*yRadians);
-	float sinhalf = sinf(-0.5f*yRadians);
-	ob->orientedBox.rotAux[0] = coshalf*sinhalf;
-	ob->orientedBox.rotAux[1] = coshalf*coshalf - 0.5f;
-	//auto r0 = -1.0f*sinf(yRadians) / 2.0f;
-	//auto r1 = (cosf(yRadians)) / 2.0f;
-	//ob->orientedBox.rotAux[0] = r0;
-	//ob->orientedBox.rotAux[1] = r1;
+	//float coshalf= cosf(0.5f*yRadians);
+	//float sinhalf = sinf(-0.5f*yRadians);
+	//ob->orientedBox.rotAux[0] = coshalf*sinhalf;
+	//ob->orientedBox.rotAux[1] = coshalf*coshalf - 0.5f;
+	auto r0 = -1.0f * sinf(yRadians) / 2.0f;
+	auto r1 = (cosf(yRadians)) / 2.0f;
+	ob->orientedBox.rotAux[0] = r0;
+	ob->orientedBox.rotAux[1] = r1;
 	ob->orientedBox.yaw = yRadians;
 
 	ObstacleRequest* req = &m_reqs[m_nreqs++];
@@ -814,12 +819,50 @@ void dtTileCache::getObstacleBounds(const struct dtTileCacheObstacle* ob, float*
 	{
 		const dtObstacleOrientedBox &orientedBox = ob->orientedBox;
 
-		float maxr = 1.41f*dtMax(orientedBox.halfExtents[0], orientedBox.halfExtents[2]);
-		bmin[0] = orientedBox.center[0] - maxr;
-		bmax[0] = orientedBox.center[0] + maxr;
+		//float maxr = 1.41f*dtMax(orientedBox.halfExtents[0], orientedBox.halfExtents[2]);
+		//bmin[0] = orientedBox.center[0] - maxr;
+		//bmax[0] = orientedBox.center[0] + maxr;
+		//bmin[1] = orientedBox.center[1] - orientedBox.halfExtents[1];
+		//bmax[1] = orientedBox.center[1] + orientedBox.halfExtents[1];
+		//bmin[2] = orientedBox.center[2] - maxr;
+		//bmax[2] = orientedBox.center[2] + maxr;
+
+		mathfu::Vector<float, 3> centerPos(orientedBox.center[0], orientedBox.center[1], orientedBox.center[2]);
+
+		std::vector<mathfu::Vector<float, 3>> ps;
+		ps.emplace_back(- orientedBox.halfExtents[0], 0.0f, - orientedBox.halfExtents[2]);
+		ps.emplace_back(- orientedBox.halfExtents[0], 0.0f, + orientedBox.halfExtents[2]);
+		ps.emplace_back(+ orientedBox.halfExtents[0], 0.0f, - orientedBox.halfExtents[2]);
+		ps.emplace_back(+ orientedBox.halfExtents[0], 0.0f, + orientedBox.halfExtents[2]);
+
+		mathfu::Matrix<float, 3> rotation_around_y(mathfu::Matrix<float, 3>::RotationY(-orientedBox.yaw));
+
+		bmin[0] = FLT_MAX;
+		bmax[0] = FLT_MIN;
+		bmin[2] = FLT_MAX;
+		bmax[2] = FLT_MIN;
+		for (auto&& p:ps)
+		{
+			p = p * rotation_around_y + centerPos;
+			if (p.x < bmin[0])
+			{
+				bmin[0] = p.x;
+			}
+			if (p.x > bmax[0])
+			{
+				bmax[0] = p.x;
+			}
+			if (p.z < bmin[2])
+			{
+				bmin[2] = p.z;
+			}
+			if (p.z > bmax[2])
+			{
+				bmax[2] = p.z;
+			}
+		}
+
 		bmin[1] = orientedBox.center[1] - orientedBox.halfExtents[1];
 		bmax[1] = orientedBox.center[1] + orientedBox.halfExtents[1];
-		bmin[2] = orientedBox.center[2] - maxr;
-		bmax[2] = orientedBox.center[2] + maxr;
 	}
 }

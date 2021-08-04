@@ -66,7 +66,7 @@ struct dtObstacleOrientedBox
 	float yaw;
 };
 
-static const int DT_MAX_TOUCHED_TILES = 8;
+static const int DT_MAX_TOUCHED_TILES = 64;
 struct dtTileCacheObstacle
 {
 	union

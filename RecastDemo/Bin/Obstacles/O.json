@@ -1,6 +1,66 @@
 {
 	"obstacleMap":
 	{
+		"0":
+		{
+			"doorId": 0,
+			"initState": 1,
+			"boxes": [
+				{
+					"centX": 3563,
+					"centY": 762,
+					"centZ": 760,
+					"halfX": 640,
+					"halfY": 200,
+					"halfZ": 640,
+					"rotationZ": 179
+				}
+			],
+			"cylinders": []
+		},
+		"1":
+		{
+			"doorId": 1,
+			"initState": 0,
+			"boxes": [
+				{
+					"centX": -910,
+					"centY": 2180,
+					"centZ": 400,
+					"halfX": 640,
+					"halfY": 200,
+					"halfZ": 640,
+					"rotationZ": 179
+				}
+			],
+			"cylinders": []
+		},
+		"2":
+		{
+			"doorId": 2,
+			"initState": 1,
+			"boxes": [
+				{
+					"centX": 238,
+					"centY": -93,
+					"centZ": 520,
+					"halfX": 640,
+					"halfY": 200,
+					"halfZ": 640,
+					"rotationZ": 90
+				},
+				{
+					"centX": 943,
+					"centY": -27,
+					"centZ": 730,
+					"halfX": 640,
+					"halfY": 200,
+					"halfZ": 640,
+					"rotationZ": -90
+				}
+			],
+			"cylinders": []
+		},
 		"4":
 		{
 			"doorId": 4,
@@ -12,8 +72,25 @@
 					"centZ": 430,
 					"halfX": 1000,
 					"halfY": 200,
-					"halfZ": 1000,
+					"halfZ": 640,
 					"rotationZ": 89
+				}
+			],
+			"cylinders": []
+		},
+		"5":
+		{
+			"doorId": 5,
+			"initState": 1,
+			"boxes": [
+				{
+					"centX": 8280,
+					"centY": -4090,
+					"centZ": 1420,
+					"halfX": 640,
+					"halfY": 200,
+					"halfZ": 640,
+					"rotationZ": 0
 				}
 			],
 			"cylinders": []
