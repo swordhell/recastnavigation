@@ -797,11 +797,17 @@ public:
 	}
 };
 
+enum TempObstacleType
+{
+	TempObstacleType_Cylinder,
+	TempObstacleType_AABB,
+	TempObstacleType_OBB,
+};
 
 class TempObstacleCreateTool : public SampleTool
 {
 	Sample_TempObstacles* m_sample;
-	
+	int m_obstaceType = { 0 };
 public:
 	
 	TempObstacleCreateTool() : m_sample(0)
@@ -832,6 +838,15 @@ public:
 
 		imguiValue("Click LMB to create an obstacle.");
 		imguiValue("Shift+LMB to remove an obstacle.");
+
+		imguiSeparator();
+		imguiLabel("Obstacle Type");
+		if (imguiCheck("cylinder", m_obstaceType == TempObstacleType_Cylinder))
+			m_obstaceType = TempObstacleType_Cylinder;
+		if (imguiCheck("AABB", m_obstaceType == TempObstacleType_AABB))
+			m_obstaceType = TempObstacleType_AABB;
+		if (imguiCheck("OBB", m_obstaceType == TempObstacleType_OBB))
+			m_obstaceType = TempObstacleType_OBB;
 	}
 	
 	virtual void handleClick(const float* s, const float* p, bool shift)
@@ -840,8 +855,9 @@ public:
 		{
 			if (shift)
 				m_sample->removeTempObstacle(s,p);
-			else
-				m_sample->addTempObstacle(p);
+			else {
+				m_sample->addTempObstacle(p, m_obstaceType);
+			}
 		}
 	}
 	
@@ -1270,38 +1286,45 @@ void load_all_obbobstacles(std::vector<float> &ret)
 	}
 }
 
-void Sample_TempObstacles::addTempObstacle(const float* pos)
+void Sample_TempObstacles::addTempObstacle(const float* pos, const int obstacleType)
 {
 	if (!m_tileCache)
 		return;
-	//float p[3];
-	//dtVcopy(p, pos);
-	//p[1] -= 0.5f;
-	//m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
-	//m_ctx->log(RC_LOG_PROGRESS, "addTempObstacle: %.2f, %.2f, %.2f", pos[0], pos[1], pos[2]);
-
-	std::vector<float> ret;
-	load_all_aabbobstacles(ret);
-	auto count = ret.size() / 6;
-	for (unsigned int i = 0; i < count; i++)
+	if (TempObstacleType_AABB == obstacleType)
 	{
-		float bmin[3] = { ret[i * 6],ret[i * 6 + 1], ret[i * 6 + 2] };
-		float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
-		dtObstacleRef result;
-		m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
+		std::vector<float> ret;
+		load_all_aabbobstacles(ret);
+		auto count = ret.size() / 6;
+		for (unsigned int i = 0; i < count; i++)
+		{
+			float bmin[3] = { ret[i * 6],ret[i * 6 + 1], ret[i * 6 + 2] };
+			float bmax[3] = { ret[i * 6 + 3], ret[i * 6 + 4], ret[i * 6 + 5] };
+			dtObstacleRef result;
+			m_tileCache->addBoxObstacle((const float*)bmin, (const float*)bmax, &result);
+		}
 	}
-
-	//std::vector<float> ret;
-	//load_all_obbobstacles(ret);
-	//auto count = ret.size() / 7;
-	//for (unsigned int i = 0; i < count; i++)
-	//{
-	//	float centerPos[3] = { ret[i * 7],ret[i * 7 + 1], ret[i * 7 + 2] };
-	//	float extend[3] = { ret[i * 7 + 3], ret[i * 7 + 4], ret[i * 7 + 5] };
-	//	float degree = ret[i * 7 + 6];
-	//	dtObstacleRef result;
-	//	m_tileCache->addBoxObstacle((const float*)centerPos, (const float*)extend, degree, &result);
-	//}
+	else if (TempObstacleType_OBB == obstacleType)
+	{
+		std::vector<float> ret;
+		load_all_obbobstacles(ret);
+		auto count = ret.size() / 7;
+		for (unsigned int i = 0; i < count; i++)
+		{
+			float centerPos[3] = { ret[i * 7],ret[i * 7 + 1], ret[i * 7 + 2] };
+			float extend[3] = { ret[i * 7 + 3], ret[i * 7 + 4], ret[i * 7 + 5] };
+			float degree = ret[i * 7 + 6];
+			dtObstacleRef result;
+			m_tileCache->addBoxObstacle((const float*)centerPos, (const float*)extend, degree, &result);
+		}
+	}
+	else
+	{
+		float p[3];
+		dtVcopy(p, pos);
+		p[1] -= 0.5f;
+		m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
+		m_ctx->log(RC_LOG_PROGRESS, "addTempObstacle: %.2f, %.2f, %.2f", pos[0], pos[1], pos[2]);
+	}
 
 }
 

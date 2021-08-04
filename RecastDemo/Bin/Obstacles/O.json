@@ -1,0 +1,22 @@
+{
+	"obstacleMap":
+	{
+		"4":
+		{
+			"doorId": 4,
+			"initState": 1,
+			"boxes": [
+				{
+					"centX": 4650,
+					"centY": -4400,
+					"centZ": 430,
+					"halfX": 1000,
+					"halfY": 200,
+					"halfZ": 1000,
+					"rotationZ": 89
+				}
+			],
+			"cylinders": []
+		}
+	}
+}
